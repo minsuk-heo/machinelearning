@@ -6,17 +6,18 @@ Decision Tree Source Code for Machine Learning in Action Ch. 3
 from math import log
 import operator
 
-
 def createDataSet():
-    dataSet = [[1, 1, 'yes'],
-               [1, 1, 'yes'],
-               [1, 0, 'no'],
-               [0, 1, 'no'],
-               [0, 1, 'no']]
-    labels = ['no surfacing', 'flippers']
+    dataSet = [[0, 1, 1, 'yes'],
+               [0, 1, 0, 'no'],
+               [1, 0, 1, 'no'],
+               [1, 1, 1, 'no'],
+               [0, 1, 0, 'no'],
+               [0, 0, 1, 'no'],
+               [1, 0, 1, 'no'],
+               [1, 1, 0, 'no']]
+    labels = ['cartoon', 'winter', 'more than 1 person']
     # change to discrete values
     return dataSet, labels
-
 
 def calcShannonEnt(dataSet):
     numEntries = len(dataSet)
@@ -55,7 +56,15 @@ def chooseBestFeatureToSplit(dataSet):
             subDataSet = splitDataSet(dataSet, i, value)
             prob = len(subDataSet) / float(len(dataSet))
             newEntropy += prob * calcShannonEnt(subDataSet)
+
+
         infoGain = baseEntropy - newEntropy  # calculate the info gain; ie reduction in entropy
+        """
+        print("feature : " + str(i))
+        print("baseEntropy : "+str(baseEntropy))
+        print("newEntropy : " + str(newEntropy))
+        print("infoGain : " + str(infoGain))
+        """
         if (infoGain > bestInfoGain):  # compare this to the best gain so far
             bestInfoGain = infoGain  # if better than current best, set to best
             bestFeature = i
@@ -72,32 +81,48 @@ def majorityCnt(classList):
 
 
 def createTree(dataSet, labels):
+    # extracting data
     classList = [example[-1] for example in dataSet]
     if classList.count(classList[0]) == len(classList):
         return classList[0]  # stop splitting when all of the classes are equal
     if len(dataSet[0]) == 1:  # stop splitting when there are no more features in dataSet
         return majorityCnt(classList)
+    # use Information Gain
     bestFeat = chooseBestFeatureToSplit(dataSet)
     bestFeatLabel = labels[bestFeat]
+
+    #build a tree recursively
     myTree = {bestFeatLabel: {}}
+    #print("myTree : "+labels[bestFeat])
     del (labels[bestFeat])
     featValues = [example[bestFeat] for example in dataSet]
+    #print("featValues: "+str(featValues))
     uniqueVals = set(featValues)
+    #print("uniqueVals: " + str(uniqueVals))
     for value in uniqueVals:
         subLabels = labels[:]  # copy all of labels, so trees don't mess up existing labels
+        #print("subLabels"+str(subLabels))
         myTree[bestFeatLabel][value] = createTree(splitDataSet(dataSet, bestFeat, value), subLabels)
+        #print("myTree : " + str(myTree))
     return myTree
 
 
 def classify(inputTree, featLabels, testVec):
     firstStr = inputTree.keys()[0]
+    #print("fistStr : "+firstStr)
     secondDict = inputTree[firstStr]
+    #print("secondDict : " + str(secondDict))
     featIndex = featLabels.index(firstStr)
+    #print("featIndex : " + str(featIndex))
     key = testVec[featIndex]
+    #print("key : " + str(key))
     valueOfFeat = secondDict[key]
+    #print("valueOfFeat : " + str(valueOfFeat))
     if isinstance(valueOfFeat, dict):
+        #print("is instance: "+str(valueOfFeat))
         classLabel = classify(valueOfFeat, featLabels, testVec)
     else:
+        #print("is Not instance: " + valueOfFeat)
         classLabel = valueOfFeat
     return classLabel
 
@@ -114,5 +139,22 @@ def grabTree(filename):
     fr = open(filename)
     return pickle.load(fr)
 
+# collect data
 myDat, labels = createDataSet()
-print(myDat)
+
+#build a tree
+mytree = createTree(myDat, labels)
+print(mytree)
+
+print("Thanks, now I can recognize winter family photo, give me any photo")
+
+#run test
+
+# test with winter family photo
+answer = classify(mytree, ['cartoon', 'winter', 'more than 1 person'], [0, 1, 1])
+print("Hi, the answer is "+ answer + ", it is winter family photo")
+
+# test with cartoon characters winter pictures
+answer = classify(mytree, ['cartoon', 'winter', 'more than 1 person'], [1, 1, 1])
+print("Hi, the answer is "+ answer + ", it is not winter family photo")
+

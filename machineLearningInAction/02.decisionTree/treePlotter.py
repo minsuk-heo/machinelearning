@@ -4,6 +4,7 @@ Created on Oct 14, 2010
 @author: Peter Harrington
 '''
 import matplotlib.pyplot as plt
+import trees
 
 decisionNode = dict(boxstyle="sawtooth", fc="0.8")
 leafNode = dict(boxstyle="round4", fc="0.8")
@@ -71,22 +72,9 @@ def createPlot(inTree):
     plotTree(inTree, (0.5,1.0), '')
     plt.show()
 
-#def createPlot():
-#    fig = plt.figure(1, facecolor='white')
-#    fig.clf()
-#    createPlot.ax1 = plt.subplot(111, frameon=False) #ticks for demo puropses 
-#    plotNode('a decision node', (0.5, 0.1), (0.1, 0.5), decisionNode)
-#    plotNode('a leaf node', (0.8, 0.1), (0.3, 0.8), leafNode)
-#    plt.show()
+# collect data
+myDat, labels = trees.createDataSet()
+mytree = trees.createTree(myDat, labels)
 
-def retrieveTree(i):
-    listOfTrees =[{'no surfacing': {0: 'no', 1: {'flippers': {0: 'no', 1: 'yes'}}}},
-                  {'no surfacing': {0: 'no', 1: {'flippers': {0: {'head': {0: 'no', 1: 'yes'}}, 1: 'no'}}}}
-                  ]
-    return listOfTrees[i]
-
-#createPlot(thisTree)
-retrieveTree(1)
-myTree = retrieveTree(0)
-getNumLeafs(myTree)
-createPlot(myTree)
+#visualize decision tree
+createPlot(mytree)
